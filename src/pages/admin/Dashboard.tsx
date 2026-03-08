@@ -1,154 +1,115 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+
+import { api, formatCurrency, type DashboardResponse } from '../../services/api';
 
 export default function Dashboard() {
+  const [data, setData] = useState<DashboardResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getAdminDashboard().then(setData).catch((err: Error) => setError(err.message));
+  }, []);
+
+  const growthMax = useMemo(() => {
+    if (!data?.growth.length) return 1;
+    return Math.max(...data.growth.map((point) => point.revenue), 1);
+  }, [data]);
+
+  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  if (!data) return <div className="p-8 text-slate-500">Chargement...</div>;
+
   return (
-    <div className="p-8 space-y-8">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Good morning, Alex</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Here's what's happening across your marketplace today.</p>
-      </div>
+    <div className="p-6 md:p-8 space-y-6">
+      <section className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 to-white dark:to-slate-900 p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">Control Center</p>
+        <h1 className="mt-2 text-3xl md:text-4xl font-black text-slate-900 dark:text-white">Marketplace Dashboard</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Vue consolidée des ventes, utilisateurs et annonces actives.</p>
+      </section>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-primary/10 text-primary rounded-xl">
-              <span className="material-symbols-outlined">payments</span>
-            </div>
-            <span className="flex items-center gap-1 text-emerald-600 text-sm font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
-              <span className="material-symbols-outlined text-xs">trending_up</span> 12.5%
-            </span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Sales</p>
-          <p className="text-3xl font-extrabold mt-1">$124,592.00</p>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
-              <span className="material-symbols-outlined">person_add</span>
-            </div>
-            <span className="flex items-center gap-1 text-red-600 text-sm font-bold bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg">
-              <span className="material-symbols-outlined text-xs">trending_down</span> 2.4%
-            </span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">New Users</p>
-          <p className="text-3xl font-extrabold mt-1">1,240</p>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-orange-500/10 text-orange-500 rounded-xl">
-              <span className="material-symbols-outlined">inventory_2</span>
-            </div>
-            <span className="flex items-center gap-1 text-emerald-600 text-sm font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
-              <span className="material-symbols-outlined text-xs">trending_up</span> 5.7%
-            </span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Listings</p>
-          <p className="text-3xl font-extrabold mt-1">45,281</p>
-        </div>
-      </div>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <article className="rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary/70">Total Sales</p>
+          <p className="mt-2 text-3xl font-black">{formatCurrency(data.stats.total_sales)}</p>
+          <p className="mt-2 text-xs font-bold text-primary">{data.stats.total_sales_growth_pct}% vs période précédente</p>
+        </article>
+        <article className="rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary/70">New Users</p>
+          <p className="mt-2 text-3xl font-black">{data.stats.new_users}</p>
+          <p className="mt-2 text-xs font-bold text-slate-600 dark:text-slate-300">{data.stats.new_users_growth_pct}% vs période précédente</p>
+        </article>
+        <article className="rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary/70">Active Listings</p>
+          <p className="mt-2 text-3xl font-black">{data.stats.active_listings}</p>
+          <p className="mt-2 text-xs font-bold text-primary">{data.stats.active_listings_growth_pct}% vs période précédente</p>
+        </article>
+      </section>
 
-      {/* Charts & Lists Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Growth Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-lg font-bold">Growth Overview</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Monthly revenue trends</p>
-            </div>
-            <select className="bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-primary">
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>This year</option>
-            </select>
+      <section className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+        <article className="xl:col-span-3 rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-black">Revenue Trend</h2>
+            <span className="text-xs font-semibold text-slate-500">7 derniers points</span>
           </div>
-          <div className="h-[250px] w-full relative">
-            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 40">
-              <defs>
-                <linearGradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: 'rgba(0, 117, 128, 0.2)', stopOpacity: 1 }}></stop>
-                  <stop offset="100%" style={{ stopColor: 'rgba(0, 117, 128, 0)', stopOpacity: 1 }}></stop>
-                </linearGradient>
-              </defs>
-              <path d="M0 35 Q 10 32, 20 25 T 40 28 T 60 15 T 80 18 T 100 5 L 100 40 L 0 40 Z" fill="url(#gradient)"></path>
-              <path d="M0 35 Q 10 32, 20 25 T 40 28 T 60 15 T 80 18 T 100 5" fill="none" stroke="#007580" strokeWidth="1.5"></path>
-            </svg>
-            <div className="flex justify-between mt-4 px-2">
-              <span className="text-xs text-slate-400 font-bold uppercase">Mon</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Tue</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Wed</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Thu</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Fri</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Sat</span>
-              <span className="text-xs text-slate-400 font-bold uppercase">Sun</span>
-            </div>
+          <div className="grid grid-cols-7 gap-2 items-end h-44">
+            {data.growth.map((point) => {
+              const h = Math.max((point.revenue / growthMax) * 100, 8);
+              return (
+                <div key={point.label} className="flex flex-col items-center gap-2">
+                  <div
+                    className="w-full rounded-md bg-primary/80 hover:bg-primary transition-colors cursor-pointer"
+                    style={{ height: `${h}%` }}
+                    title={`${point.label}: ${Math.round(point.revenue)}`}
+                  />
+                  <span className="text-[11px] font-semibold text-slate-500">{point.label}</span>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </article>
 
-        {/* Recent Transactions */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold">Recent Orders</h3>
-            <Link className="text-xs font-bold text-primary hover:underline" to="/admin">View All</Link>
-          </div>
-          <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0"
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCHpouZ3SbaQDeo8NX9r38KOg0ABL9L9_gh5jLbGPHT34BE0AquKN8NeWV-bEzcS-pj5yyhpCWJgeNiY0R8--o1HQRdXvE1TvfrvglO8LKwJSeES3gm4e6R_OgGpek0OZGikvb7jF1EFaIXVR3rlu_4jfZX1CoWwBbYCll5-laIqKlPrGWqox0fJ9HX8iSQmP4ha0cMjU1CRNN3KwhgtrMGD_AXW-G-pLVbAjZ7v71qIrhcTvZq1IPh2_41YBI-UZcBQW5MzDk_DfGs')" }}
-              ></div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-bold truncate">Vintage Leather Jacket</p>
-                <p className="text-xs text-slate-500">by Emma S. • 2m ago</p>
-              </div>
-              <p className="text-sm font-bold text-primary">$85.00</p>
+        <article className="xl:col-span-2 rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <h2 className="text-lg font-black mb-4">Health Snapshot</h2>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-primary/10 bg-primary/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary/70">Conversion Proxy</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">
+                {((data.stats.total_sales / Math.max(data.stats.active_listings, 1)) * 100).toFixed(2)}%
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0"
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCQNMrocjCNYLni637V0kHll2ytujRmugQMK_8aA4nAKvVT8IP9v16E9rkhLJu7uMVDby8q3yONB7ww19_iCECtR1UgMlrNsFw2j5_tZ0yC5HwKcIZt80X5sZe3trq-pBIzZk5pLKioC9ithpi3pfSDNpBD_MLYbIB_oigRoYOjW3YMSJDk-KbbGvtZXsIfc7KHYleO6WXN4rL5wNe9YyUxi2Z0qpGJcP4sivbgeH5U96xphbWaEooag7_rwD3Cu2NWTr4r5WZhjtAZ')" }}
-              ></div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-bold truncate">Polaroid 600 Camera</p>
-                <p className="text-xs text-slate-500">by Jack R. • 15m ago</p>
-              </div>
-              <p className="text-sm font-bold text-primary">$120.00</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0"
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDGuJUR7mmHEmM1kFnmoZ-w7VuhAwrPHC-9AT86iIHa0hDvHDLRUnjF1JBVHsNUNIuR5V6qkYE0-br2iglVTzxLNxYiuOwgfqWzG0DmdCwNsIQa4wozar3SuWW2BT69XarnYZ-3f3-u-_b33-_mo29mrBmvJ4cgdryQybqaR9wt-VZ49Ku3isOvfdKvD4fpNFrjTc5C8NlnSYdIGNr68dj5C73zeT3qlCyrW7EQacnyNx847JV5IVt0KnMi9YDB38awqhl76eq4IRpp')" }}
-              ></div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-bold truncate">Handmade Ceramic Pot</p>
-                <p className="text-xs text-slate-500">by Maria L. • 45m ago</p>
-              </div>
-              <p className="text-sm font-bold text-primary">$45.00</p>
+            <div className="rounded-xl border border-primary/10 bg-slate-50 dark:bg-slate-800 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Orders Tracked</p>
+              <p className="text-2xl font-black">{data.recent_orders.length}</p>
             </div>
           </div>
-          <button className="w-full mt-6 py-3 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            Manage All Orders
-          </button>
-        </div>
-      </div>
+        </article>
+      </section>
 
-      {/* Footer-style Action */}
-      <div className="flex items-center justify-between p-6 bg-primary rounded-2xl text-white shadow-xl shadow-primary/20">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 flex items-center justify-center bg-white/20 rounded-xl">
-            <span className="material-symbols-outlined">auto_graph</span>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg leading-tight">Ready for Q3 analysis?</h4>
-            <p className="text-primary-100/80 text-sm">Our AI tools can help you predict sales trends for the next quarter.</p>
-          </div>
+      <section className="rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-primary/10">
+          <h2 className="text-lg font-black">Recent Orders</h2>
         </div>
-        <button className="bg-white text-primary px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors">
-          Run Prediction
-        </button>
-      </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-primary/5 text-primary text-xs uppercase tracking-wider">
+              <tr>
+                <th className="px-5 py-3">Item</th>
+                <th className="px-5 py-3">Buyer</th>
+                <th className="px-5 py-3 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.recent_orders.map((order) => (
+                <tr key={order.id} className="border-t border-primary/10 hover:bg-primary/5 transition-colors">
+                  <td className="px-5 py-3 font-semibold">{order.item_name}</td>
+                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{order.buyer_name}</td>
+                  <td className="px-5 py-3 text-right font-black text-primary">{formatCurrency(order.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
+

@@ -1,6 +1,8 @@
 import { Link, Outlet } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 export default function MainLayout() {
+  const { user, logout } = useAuth();
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
       <div className="layout-container flex h-full grow flex-col">
@@ -37,9 +39,15 @@ export default function MainLayout() {
                 <button className="flex items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all shadow-sm">
                   <span>Sell now</span>
                 </button>
-                <button className="hidden sm:flex items-center justify-center rounded-lg h-10 px-4 border border-primary/20 text-primary text-sm font-bold hover:bg-primary/5 transition-all">
-                  <span>Log in</span>
-                </button>
+                {user ? (
+                  <button onClick={logout} className="hidden sm:flex items-center justify-center rounded-lg h-10 px-4 border border-primary/20 text-primary text-sm font-bold hover:bg-primary/5 transition-all">
+                    <span>Log out</span>
+                  </button>
+                ) : (
+                  <Link to="/login" className="hidden sm:flex items-center justify-center rounded-lg h-10 px-4 border border-primary/20 text-primary text-sm font-bold hover:bg-primary/5 transition-all">
+                    <span>Log in</span>
+                  </Link>
+                )}
                 <Link to="/admin" className="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/5 text-primary hover:bg-primary/10 transition-all" title="Admin Dashboard">
                   <span className="material-symbols-outlined">admin_panel_settings</span>
                 </Link>

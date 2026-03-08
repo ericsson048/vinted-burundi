@@ -1,8 +1,11 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 export default function AdminLayout() {
   const location = useLocation();
   const path = location.pathname;
+  const isActive = (route: string) => path === route || path.startsWith(`${route}/`);
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
@@ -28,7 +31,7 @@ export default function AdminLayout() {
             <Link
               to="/admin/users"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                path === '/admin/users' ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
+                isActive('/admin/users') ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
               }`}
             >
               <span className="material-symbols-outlined">group</span>
@@ -37,29 +40,35 @@ export default function AdminLayout() {
             <Link
               to="/admin/moderation"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                path === '/admin/moderation' ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
+                isActive('/admin/moderation') ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
               }`}
             >
               <span className="material-symbols-outlined">gavel</span>
               Moderation
             </Link>
             <Link
-              to="/admin"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors"
+              to="/admin/listings"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                isActive('/admin/listings') ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
+              }`}
             >
               <span className="material-symbols-outlined">shopping_bag</span>
               Listings
             </Link>
             <Link
-              to="/admin"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors"
+              to="/admin/transactions"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                isActive('/admin/transactions') ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
+              }`}
             >
               <span className="material-symbols-outlined">payments</span>
               Transactions
             </Link>
             <Link
-              to="/admin"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors"
+              to="/admin/settings"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                isActive('/admin/settings') ? 'bg-primary text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary'
+              }`}
             >
               <span className="material-symbols-outlined">settings</span>
               Settings
@@ -76,10 +85,13 @@ export default function AdminLayout() {
               }}
             ></div>
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-bold truncate">Alex Rivier</span>
-              <span className="text-xs text-slate-500 truncate">Super Admin</span>
+              <span className="text-sm font-bold truncate">{user?.full_name ?? 'Admin'}</span>
+              <span className="text-xs text-slate-500 truncate">{user?.is_admin ? 'Super Admin' : 'Member'}</span>
             </div>
           </div>
+          <button onClick={logout} className="mt-3 w-full py-2 rounded-lg border border-primary/20 text-primary text-sm font-bold hover:bg-primary/5">
+            Log out
+          </button>
         </div>
       </aside>
 
